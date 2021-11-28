@@ -1,10 +1,10 @@
 """
-This module provides the methods used in our paper to conduct Connectome-Based
-Smoothing (CBS).
+This module provides the methods used in our paper to conduct Connectome Spatial
+Smoothing (CSS).
 
 The module contains the folowing functionalities:
     - Code to map high-resolution and atlas-resolution connetomes
-    - Code to perform CBS
+    - Code to perform CSS
 
 Python implementation of connectome-based smoothing
 Author: Sina Mansour L.
@@ -193,7 +193,7 @@ def parcellation_characteristic_matrix(atlas_file=_glasser_cifti):
     return labels, sparse.csr_matrix(parcellation_matrix)
 
 
-# CBS Smoothing kernel
+# CSS Smoothing kernel
 
 
 def _local_geodesic_distances(max_distance, vertices, triangles):
@@ -275,7 +275,7 @@ def _local_distances_to_smoothing_coefficients(local_distance, sigma):
 
 def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilon=0.01):
     """
-    Compute the CBS smoothing kernel.
+    Compute the CSS smoothing kernel.
 
     Args:
 
@@ -304,30 +304,30 @@ def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilo
 
 def smooth_high_resolution_connectome(high_resolution_connectome, smoothing_kernel):
     """
-    Perform CBS to smooth a high-resolution connectome.
+    Perform CSS to smooth a high-resolution connectome.
 
     Args:
 
         high_resolution_connectome: The high-resolution structural connectome (59412 x 59412 sparse CSR matrix)
 
-        smoothing_kernel: The v x v CBS high-resolution smoothing kernel
+        smoothing_kernel: The v x v CSS high-resolution smoothing kernel
 
     Returns:
 
-        smoothed_high_resolution_connectome: The CBS smoothed connectome.
+        smoothed_high_resolution_connectome: The CSS smoothed connectome.
     """
     return smoothing_kernel.dot(high_resolution_connectome.dot(smoothing_kernel.T))
 
 
 def smooth_parcellation_matrix(parcellation_matrix, smoothing_kernel):
     """
-    Perform CBS to smooth a brain atlas parcellation (in the form of a p x v matrix) to a new soft parcellation..
+    Perform CSS to smooth a brain atlas parcellation (in the form of a p x v matrix) to a new soft parcellation..
 
     Args:
 
         parcellation_matrix: The p x v sparse matrix representation of the atlas.
 
-        smoothing_kernel: The v x v CBS high-resolution smoothing kernel.
+        smoothing_kernel: The v x v CSS high-resolution smoothing kernel.
 
     Returns:
 

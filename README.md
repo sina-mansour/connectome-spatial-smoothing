@@ -1,8 +1,8 @@
-# connectome-based-smoothing
+# Connectome Spatial Smoothing
 
-Here, you may find the Python codes and sample scripts for connectome-based smoothing (CBS).
+Here, you may find the Python codes and sample scripts for Connectome Spatial Smoothing (CSS).
 
-For more information you may check our article on **Connectome-Based Smoothing (CBS): Concepts, methods and evaluation** (currently under review). All resources are provided as complementary to the following article:
+For more information you may check our article on **Connectome Spatial Smoothing (CSS): concepts, methods and evaluation** (currently under review). All resources are provided as complementary to the following article:
 
 ...article information to be added after publication...
 
@@ -15,11 +15,11 @@ The codes in this repository mainly perform the following tasks:
 
 - Map atlas-resolution structural connectomes from tractography
 
-- Compute the CBS smoothing kernel with selected parameters
+- Compute the CSS smoothing kernel with selected parameters
 
-- Perform CBS on high-resolution connectomes
+- Perform CSS on high-resolution connectomes
 
-- Perform CBS directly on atlas connectomes
+- Perform CSS directly on atlas connectomes
 
 ---
 
