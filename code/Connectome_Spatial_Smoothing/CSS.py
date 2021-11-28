@@ -26,7 +26,7 @@ import gdist
 import multiprocessing as mp
 
 
-_main_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__))))
+_main_dir = os.path.abspath(os.path.dirname(__file__))
 _sample_cifti_dscalar = os.path.join(_main_dir, 'data/templates/cifti/ones.dscalar.nii')
 _glasser_cifti = os.path.join(_main_dir, 'data/templates/atlas/Glasser360.32k_fs_LR.dlabel.nii')
 

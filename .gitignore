@@ -1,2 +1,10 @@
+# ipython
 .ipynb_checkpoints/
+
+# pycache
 code/__pycache__
+
+# packaging
+build/
+dist/
+*.egg-info/
