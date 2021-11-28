@@ -7,7 +7,7 @@ requirements = ["numpy", "scipy", "sklearn", "nibabel", "gdist"]
 
 setuptools.setup(
     name="Connectome_Spatial_Smoothing",
-    version="0.1.0",
+    version="0.1.1",
     author="Sina Mansour L.",
     author_email="sina.mansour.lakouraj@gmail.com",
     description="Connectome Spatial Smoothing",
@@ -23,7 +23,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     package_dir={"": "code"},
-    packages=setuptools.find_packages(where="src"),
+    packages=setuptools.find_packages(where="code"),
     python_requires=">=3.6",
     install_requires=requirements,
     include_package_data=True,
