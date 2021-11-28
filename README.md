@@ -6,6 +6,10 @@ For more information you may check our article on **Connectome Spatial Smoothing
 
 ...article information to be added after publication...
 
+The code used for this study is now released as a [python package](https://pypi.org/project/Connectome-Spatial-Smoothing/). If using the codes, please also cite the following:
+
+...citeable code reference...
+
 
 ---
 
