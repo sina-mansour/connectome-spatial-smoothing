@@ -4,7 +4,9 @@ Here, you may find the Python codes and sample scripts for Connectome Spatial Sm
 
 For more information you may check our article on **Connectome Spatial Smoothing (CSS): concepts, methods and evaluation** (currently under review). All resources are provided as complementary to the following article:
 
-...article information to be added after publication...
+Mansour L., S., Seguin, C., Smith, R.E. and Zalesky, A., 2021. Connectome-Based Smoothing (CBS): Concepts, methods, and evaluation. *bioRxiv*; doi: https://doi.org/10.1101/2021.09.19.461011
+
+...peer-reviewed article information to be added after publication...
 
 The code used for this study is now released as a [python package](https://pypi.org/project/Connectome-Spatial-Smoothing/). If using the codes, please also cite the following:
 
