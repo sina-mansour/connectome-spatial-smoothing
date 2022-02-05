@@ -7,9 +7,9 @@ For more information you may check our article on **Connectome Spatial Smoothing
 
 Preprint:
 
-[![DOI:10.1101/2021.09.19.461011](http://img.shields.io/badge/DOI-10.1101/2021.09.19.461011-B31B1B.svg)](https://doi.org/10.1101/2021.09.19.461011)
+[![DOI:10.1016/j.neuroimage.2022.118930](http://img.shields.io/badge/DOI-10.1101/2021.09.19.461011-B31B1B.svg)](https://doi.org/10.1016/j.neuroimage.2022.118930)
 
-...peer-reviewed article information will be added after publication...
+**Mansour, L. Sina, et al. "Connectome Spatial Smoothing (CSS): concepts, methods, and evaluation." *NeuroImage* (2022): 118930.**
 
 The code used for this study is now released as a [python package](https://pypi.org/project/Connectome-Spatial-Smoothing/). If using the codes, please also cite the following:
 
