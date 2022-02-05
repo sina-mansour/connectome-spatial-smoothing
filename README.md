@@ -2,10 +2,7 @@
 
 Here, you may find the Python codes and sample scripts for Connectome Spatial Smoothing (CSS).
 
-For more information you may check our article on **Connectome Spatial Smoothing (CSS): concepts, methods and evaluation** (currently under review). All resources are provided as complementary to the following article:
-
-
-Preprint:
+For more information you may check our article on **Connectome Spatial Smoothing (CSS): concepts, methods and evaluation**. All resources are provided as complementary to the following article:
 
 [![DOI:10.1016/j.neuroimage.2022.118930](http://img.shields.io/badge/DOI-10.1016/j.neuroimage.2022.118930-B31B1B.svg)](https://doi.org/10.1016/j.neuroimage.2022.118930)
 
