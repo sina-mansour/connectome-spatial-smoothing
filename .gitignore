@@ -8,3 +8,6 @@ code/__pycache__
 build/
 dist/
 *.egg-info/
+
+# sublime workspace
+connectome-spatial-smoothing.sublime-workspace
