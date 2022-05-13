@@ -387,28 +387,65 @@ def _get_xyz(left_surface_file, right_surface_file, cifti_file=_sample_cifti_dsc
     return xyz
 
 
-def _apply_warp_to_points_mm_to_mm(native_mms, warpfile):
+def _apply_warp_to_points_mm_to_mm(native_mms, warp_file=None, warp=None):
     """
     This function is used to warp a list of points from one mm space to another mm space
     using a nonlinear warpfield file. make sure to put the reverse warp file (i.e. standard2acpc
     from the HCP files can warp the points from native to MNI)
     Note: points are given as a m*3 array.
     """
-    warp = nib.load(warpfile)
+    # only read warp if not provided
+    if warp is None:
+        warp = nib.load(warp_file)
 
+    # construct the 3-d grid
     x = np.linspace(0, warp.shape[0] - 1, warp.shape[0])
     y = np.linspace(0, warp.shape[1] - 1, warp.shape[1])
     z = np.linspace(0, warp.shape[2] - 1, warp.shape[2])
 
+    # fit a nonlinear interpolator
     xinterpolate = RegularGridInterpolator((x, y, z), warp.get_data()[:, :, :, 0])
     yinterpolate = RegularGridInterpolator((x, y, z), warp.get_data()[:, :, :, 1])
     zinterpolate = RegularGridInterpolator((x, y, z), warp.get_data()[:, :, :, 2])
 
+    # first run the linear transformation
     native_voxs = nib.affines.apply_affine(np.linalg.inv(warp.affine), native_mms)
 
+    # next run the nonlinear transformation
     dx_mm, dy_mm, dz_mm = (-xinterpolate(native_voxs), yinterpolate(native_voxs), zinterpolate(native_voxs))
 
     return native_mms + np.array([dx_mm, dy_mm, dz_mm]).T
+
+
+def _save_warped_tractography(track_file,
+                              warp_file,
+                              out_file):
+    """
+    Reads in a .tck tractography file and uses a nonlinear warp to transform the tractogram
+    to a new space. This can be used to warp the output of tractography from native space
+    to a standard template space.
+    """
+    # load the track file streamlines
+    tracks = nib.streamlines.load(track_file)
+
+    # concatenate all coordinates into a single (Nx3) vector
+    concatenated_coords = np.concatenate(tracks.streamlines)
+
+    # warp the list of 3 dimensional coordinates
+    warped_concatenated_coords = _apply_warp_to_points_mm_to_mm(concatenated_coords, warp=nib.load(warp_file))
+
+    # now rewrap warped coordinates back to the tractogram
+    start = 0
+    for ind in range(len(tracks.streamlines)):
+        step = tracks.streamlines[ind].shape[0]
+        tracks.streamlines[ind] = warped_concatenated_coords[start:(start + step)]
+        start += step
+
+    # save the output
+    tracks.save(out_file)
+
+    return tracks
+
 
 
 def _get_endpoint_distances_from_tractography(track_file,
