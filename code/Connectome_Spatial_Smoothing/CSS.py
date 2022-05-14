@@ -174,7 +174,7 @@ def _label_surface_atlas_to_data(cifti=_get_sample_cifti_dscalar(), atlas_file=_
     return labels
 
 
-def parcellation_characteristic_matrix(atlas_file=_glasser_cifti, cifti_template=_get_sample_cifti_dscalar()):
+def parcellation_characteristic_matrix(atlas_file=_glasser_cifti, cifti_template=_get_sample_cifti_dscalar(), subcortex=False):
     '''
     This function generates a p x v characteristic matrix from a brain atlas.
 
@@ -182,20 +182,24 @@ def parcellation_characteristic_matrix(atlas_file=_glasser_cifti, cifti_template
 
         atlas_file: path to a cifti atlas file (dlabel.nii) [default: HCP MMP1.0]
 
-        cifti_template: [optional] a loaded dscalar cifti file (with nibabel.load), this template is used
+        cifti_template: [optional, default: HCP-YA template] a loaded dscalar cifti file (with nibabel.load), this template is used
                         to determine the high-resolution structure (number of cortical and subcortical
                         grayordinates).
+
+        subcortex: [optional, default: False] boolean flag indicating whether subcortical labels are to be generated. If True, then
+                   subcortical and cerebellar regions are labeled according to their brain model names in cifti format.
 
     Returns:
 
         parcellation_matrix: The p x v sparse matrix representation of the atlas.
     '''
-    surface_labels = _label_surface_atlas_to_data(cifti=cifti_template, atlas_file=atlas_file, subcortex=False)
+    surface_labels = _label_surface_atlas_to_data(cifti=cifti_template, atlas_file=atlas_file, subcortex=subcortex)
 
     cortical_vertices_count = _get_number_of_cortical_vertices_from_cifti_dscalar(cifti_template)
 
     # mask only cortical regions
-    surface_labels = surface_labels[:cortical_vertices_count]
+    if not subcortex:
+        surface_labels = surface_labels[:cortical_vertices_count]
 
     labels = [x for x in list(set(surface_labels)) if x != 'Unlabeled']
     labels.sort()
@@ -239,7 +243,7 @@ def _local_geodesic_distances_on_surface(surface, max_distance):
 
 def _trim_and_stack_local_distances(left_local_distances,
                                     right_local_distances,
-                                    cifti_file=_sample_cifti_dscalar):
+                                    cifti_file):
     # load a sample file to read the mapping from
     cifti = nib.load(cifti_file)
 
@@ -260,14 +264,14 @@ def _trim_and_stack_local_distances(left_local_distances,
     return _diagonal_stack_sparse_matrices(left_cortex_local_distance, right_cortex_local_distance)
 
 
-def _get_cortical_local_distances(left_surface_file, right_surface_file, max_distance):
+def _get_cortical_local_distances(left_surface_file, right_surface_file, max_distance, cifti_file):
     """
     This function computes the local distances on the cortical surface and returns a sparse matrix
     with dimensions equal to cortical brainordinates in the cifti file.
     """
     left_local_distances = _local_geodesic_distances_on_surface(nib.load(left_surface_file), max_distance)
     right_local_distances = _local_geodesic_distances_on_surface(nib.load(right_surface_file), max_distance)
-    return _trim_and_stack_local_distances(left_local_distances, right_local_distances)
+    return _trim_and_stack_local_distances(left_local_distances, right_local_distances, cifti_file)
 
 
 def _local_distances_to_smoothing_coefficients(local_distance, sigma):
@@ -290,9 +294,9 @@ def _local_distances_to_smoothing_coefficients(local_distance, sigma):
     return sklearn.preprocessing.normalize(gaussian, norm='l1', axis=0)
 
 
-def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilon=0.01):
+def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilon=0.01, cifti_file=_sample_cifti_dscalar):
     """
-    Compute the CSS smoothing kernel.
+    Compute the CSS smoothing kernel on the cortical surfaces.
 
     Args:
 
@@ -304,6 +308,10 @@ def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilo
 
         epsilon: The kernel truncation threshold.
 
+        cifti_file: [optional, default: HCP-YA template] path to a cifti file, this template is used
+                    to determine the high-resolution structure to exclude the medial wall and potentially
+                    integrate subcortical volume.
+
     Returns:
 
         kernel: The v x v high-resolution smoothing kernel.
@@ -313,7 +321,8 @@ def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilo
         _get_cortical_local_distances(
             left_surface_file,
             right_surface_file,
-            _max_smoothing_distance(sigma, epsilon)
+            _max_smoothing_distance(sigma, epsilon),
+            cifti_file,
         ),
         sigma
     )
@@ -356,7 +365,7 @@ def smooth_parcellation_matrix(parcellation_matrix, smoothing_kernel):
 # Map high-resolution structural connectome
 
 
-def _get_xyz_hem_surface(hem_surface_file, brain_model_index, cifti_file=_sample_cifti_dscalar):
+def _get_xyz_hem_surface(hem_surface_file, brain_model_index, cifti_file):
     """
     returns the xyz mm coordinates of all brainordinates in that hemisphere's surface mesh (excludes medial wall)
     """
@@ -368,7 +377,7 @@ def _get_xyz_hem_surface(hem_surface_file, brain_model_index, cifti_file=_sample
     return hem_surface.darrays[0].data[brain_models[brain_model_index].vertex_indices]
 
 
-def _get_xyz_surface(left_surface_file, right_surface_file, cifti_file=_sample_cifti_dscalar):
+def _get_xyz_surface(left_surface_file, right_surface_file, cifti_file):
     """
     returns the xyz mm coordinates of all brainordinates in the surface mesh (excludes medial wall)
     """
@@ -381,7 +390,7 @@ def _get_xyz_surface(left_surface_file, right_surface_file, cifti_file=_sample_c
     return np.vstack([leftxyz, rightxyz])
 
 
-def _get_xyz(left_surface_file, right_surface_file, cifti_file=_sample_cifti_dscalar):
+def _get_xyz(left_surface_file, right_surface_file, cifti_file):
     """
     returns the xyz mm coordinates of all brainordinates in the cifti file (excludes medial wall, but includes subcortex)
     """
@@ -467,8 +476,10 @@ def _save_warped_tractography(track_file,
 def _get_endpoint_distances_from_tractography(track_file,
                                               left_surface_file,
                                               right_surface_file,
+                                              cifti_file,
                                               warp_file=None,
-                                              subcortex=False):
+                                              subcortex=False,
+                                              ):
     """
     Returns the streamline endpoint distances from closest vertex on cortical surface mesh
     and the closest vertex index. Additionally warps the endpoints before aligning to the
@@ -496,9 +507,9 @@ def _get_endpoint_distances_from_tractography(track_file,
 
     # extract cortical surface coordinates
     if subcortex:
-        xyz = _get_xyz(left_surface_file, right_surface_file)
+        xyz = _get_xyz(left_surface_file, right_surface_file, cifti_file=cifti_file)
     else:
-        xyz = _get_xyz_surface(left_surface_file, right_surface_file)
+        xyz = _get_xyz_surface(left_surface_file, right_surface_file, cifti_file=cifti_file)
 
     # store the coordinates in a kd-tree data structure to locate closest point faster
     kdtree = spatial.cKDTree(xyz)
@@ -578,7 +589,8 @@ def map_high_resolution_structural_connectivity(track_file,
                                                 right_surface_file,
                                                 warp_file=None,
                                                 threshold=2,
-                                                subcortex=False):
+                                                subcortex=False,
+                                                cifti_file=_sample_cifti_dscalar,):
     """
     Map the high-resolution structural connectivity matrix from tractography outputs.
 
@@ -596,6 +608,13 @@ def map_high_resolution_structural_connectivity(track_file,
         threshold: [default=2] A threshold to exclude endpoints further than that threshold from
                    any cortical vertices (in mm).
 
+        subcortex: [optional, default: False] A flag to indicate whether subcortical and cerebellar
+                   voxels should also be included in the high-resolution connectivity map.
+
+        cifti_file: [optional, default: HCP-YA template] Path to a cifti file, this template is used
+                    to determine the high-resolution structure to exclude the medial wall and potentially
+                    integrate subcortical volume.
+
     Returns:
 
         connectome: The high-resolution structural connectome in a sparse csr format.
@@ -606,6 +625,7 @@ def map_high_resolution_structural_connectivity(track_file,
                 track_file,
                 left_surface_file,
                 right_surface_file,
+                cifti_file,
                 warp_file,
                 subcortex=subcortex,
             ),
@@ -638,7 +658,8 @@ def map_atlas_resolution_structural_connectivity(track_file,
                                                  atlas_file=_glasser_cifti,
                                                  warp_file=None,
                                                  threshold=2,
-                                                 subcortex=False):
+                                                 subcortex=False,
+                                                 cifti_file=_sample_cifti_dscalar,):
     """
     Maps the structural connectivity matrix at the resolution of a brain atlas.
 
@@ -656,9 +677,16 @@ def map_atlas_resolution_structural_connectivity(track_file,
         threshold: [default=2] A threshold to exclude endpoints further than that threshold from
                    any cortical vertices (in mm).
 
+        subcortex: [optional, default: False] A flag to indicate whether subcortical and cerebellar
+                   voxels should be included and labeled by structure name.
+
+        cifti_file: [optional, default: HCP-YA template] Path to a cifti file, this template is used
+                    to determine the high-resolution structure to exclude the medial wall and potentially
+                    integrate subcortical volume.
+
     Returns:
 
-        connectome: The high-resolution structural connectome in a sparse csr format.
+        connectome: The atlas-resolution structural connectome in a sparse csr format.
     """
     return downsample_high_resolution_structural_connectivity_to_atlas(
         map_high_resolution_structural_connectivity(
@@ -670,6 +698,8 @@ def map_atlas_resolution_structural_connectivity(track_file,
             subcortex=subcortex,
         ),
         parcellation_characteristic_matrix(
-            atlas_file=atlas_file
+            atlas_file=atlas_file,
+            cifti_file=cifti_file,
+            subcortex=subcortex,
         )[1]
     )
