@@ -145,7 +145,7 @@ def _label_surface_atlas_to_data(cifti=_get_sample_cifti_dscalar(), atlas_file=_
             try:
                 label_index = surface_to_label_index_dict[surface_index] + parc_hem_cortex_brain_model.index_offset
                 cifti_offset = cifti_hem_cortex_brain_model.index_offset
-                labels[cifti_index + cifti_offset] = parc_dict[parc.get_data()[row_index, label_index]]
+                labels[cifti_index + cifti_offset] = parc_dict[parc.get_fdata()[row_index, label_index]]
             except KeyError as e:
                 continue
 
@@ -404,9 +404,9 @@ def _apply_warp_to_points_mm_to_mm(native_mms, warp_file=None, warp=None):
     z = np.linspace(0, warp.shape[2] - 1, warp.shape[2])
 
     # fit a nonlinear interpolator
-    xinterpolate = RegularGridInterpolator((x, y, z), warp.get_data()[:, :, :, 0])
-    yinterpolate = RegularGridInterpolator((x, y, z), warp.get_data()[:, :, :, 1])
-    zinterpolate = RegularGridInterpolator((x, y, z), warp.get_data()[:, :, :, 2])
+    xinterpolate = RegularGridInterpolator((x, y, z), warp.get_fdata()[:, :, :, 0])
+    yinterpolate = RegularGridInterpolator((x, y, z), warp.get_fdata()[:, :, :, 1])
+    zinterpolate = RegularGridInterpolator((x, y, z), warp.get_fdata()[:, :, :, 2])
 
     # first run the linear transformation
     native_voxs = nib.affines.apply_affine(np.linalg.inv(warp.affine), native_mms)
@@ -445,7 +445,6 @@ def _save_warped_tractography(track_file,
     tracks.save(out_file)
 
     return tracks
-
 
 
 def _get_endpoint_distances_from_tractography(track_file,
