@@ -80,7 +80,6 @@ def _get_number_of_cortical_vertices_from_cifti_dscalar(cifti):
     )
 
 
-
 def _max_smoothing_distance(sigma, epsilon, dim=2):
     """
     Computes the kernel radius as a function of kernel standard deviation and
@@ -274,6 +273,14 @@ def _get_cortical_local_distances(left_surface_file, right_surface_file, max_dis
     return _trim_and_stack_local_distances(left_local_distances, right_local_distances, cifti_file)
 
 
+def _get_spatial_local_distances(xyz, max_distance):
+    """
+    This function computes the local distances of a list of 3d coordinates using a KD tree implementation.
+    """
+    kdtree = spatial.cKDTree(xyz)
+    return kdtree.sparse_distance_matrix(kdtree, max_distance)
+
+
 def _local_distances_to_smoothing_coefficients(local_distance, sigma):
     """
     Takes a sparse local distance symmetric matrix (CSR) as input,
@@ -294,7 +301,7 @@ def _local_distances_to_smoothing_coefficients(local_distance, sigma):
     return sklearn.preprocessing.normalize(gaussian, norm='l1', axis=0)
 
 
-def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilon=0.01, cifti_file=_sample_cifti_dscalar):
+def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilon=0.01, cifti_file=_sample_cifti_dscalar, subcortex=False):
     """
     Compute the CSS smoothing kernel on the cortical surfaces.
 
@@ -312,20 +319,44 @@ def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilo
                     to determine the high-resolution structure to exclude the medial wall and potentially
                     integrate subcortical volume.
 
+        subcortex: [optional, default: False] boolean flag indicating whether subcortical and cerebellar
+                   voxels should also be include in the smoothing kernel. If True, then subcortical and
+                   cerebellar regions are smoothed with a volumetric smoothing kernel.
+
     Returns:
 
         kernel: The v x v high-resolution smoothing kernel.
     """
     sigma = _fwhm2sigma(fwhm)
-    return _local_distances_to_smoothing_coefficients(
-        _get_cortical_local_distances(
-            left_surface_file,
-            right_surface_file,
-            _max_smoothing_distance(sigma, epsilon),
-            cifti_file,
-        ),
-        sigma
+    cortical_local_geodesic_distances = _get_cortical_local_distances(
+        left_surface_file,
+        right_surface_file,
+        _max_smoothing_distance(sigma, epsilon),
+        cifti_file,
     )
+    if not subcortex:
+        return _local_distances_to_smoothing_coefficients(
+            cortical_local_geodesic_distances,
+            sigma,
+        )
+    else:
+        cortical_vertices_count = _get_number_of_cortical_vertices_from_cifti_dscalar(nib.load(cifti_file))
+        subcortical_local_euclidean_distances = _get_spatial_local_distances(
+            _get_xyz(left_surface_file, right_surface_file)[cortical_vertices_count:],
+            _max_smoothing_distance(
+                sigma,
+                epsilon,
+                2
+            )
+        )
+        combined_local_distances = _diagonal_stack_sparse_matrices(
+            cortical_local_geodesic_distances,
+            subcortical_local_euclidean_distances
+        )
+        return _local_distances_to_smoothing_coefficients(
+            combined_local_distances,
+            sigma,
+        )
 
 
 def smooth_high_resolution_connectome(high_resolution_connectome, smoothing_kernel):
