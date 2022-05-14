@@ -70,6 +70,17 @@ def _get_sample_cifti_dscalar():
     return nib.load(_sample_cifti_dscalar)
 
 
+def _get_number_of_cortical_vertices_from_cifti_dscalar(cifti):
+    # extract index counts from brain_models of cortical surfaces
+    return np.sum(
+        [
+            x.index_count for x in cifti.header.get_index_map(1).brain_models
+            if x.brain_structure in ['CIFTI_STRUCTURE_CORTEX_LEFT', 'CIFTI_STRUCTURE_CORTEX_RIGHT']
+        ]
+    )
+
+
+
 def _max_smoothing_distance(sigma, epsilon, dim=2):
     """
     Computes the kernel radius as a function of kernel standard deviation and
@@ -146,7 +157,7 @@ def _label_surface_atlas_to_data(cifti=_get_sample_cifti_dscalar(), atlas_file=_
                 label_index = surface_to_label_index_dict[surface_index] + parc_hem_cortex_brain_model.index_offset
                 cifti_offset = cifti_hem_cortex_brain_model.index_offset
                 labels[cifti_index + cifti_offset] = parc_dict[parc.get_fdata()[row_index, label_index]]
-            except KeyError as e:
+            except KeyError:
                 continue
 
     # change ??? in gordon atlas to Unlabeled
@@ -163,7 +174,7 @@ def _label_surface_atlas_to_data(cifti=_get_sample_cifti_dscalar(), atlas_file=_
     return labels
 
 
-def parcellation_characteristic_matrix(atlas_file=_glasser_cifti):
+def parcellation_characteristic_matrix(atlas_file=_glasser_cifti, cifti_template=_get_sample_cifti_dscalar()):
     '''
     This function generates a p x v characteristic matrix from a brain atlas.
 
@@ -171,21 +182,27 @@ def parcellation_characteristic_matrix(atlas_file=_glasser_cifti):
 
         atlas_file: path to a cifti atlas file (dlabel.nii) [default: HCP MMP1.0]
 
+        cifti_template: [optional] a loaded dscalar cifti file (with nibabel.load), this template is used
+                        to determine the high-resolution structure (number of cortical and subcortical
+                        grayordinates).
+
     Returns:
 
         parcellation_matrix: The p x v sparse matrix representation of the atlas.
     '''
-    surface_labels = _label_surface_atlas_to_data(cifti=_get_sample_cifti_dscalar(), atlas_file=atlas_file, subcortex=False)
+    surface_labels = _label_surface_atlas_to_data(cifti=cifti_template, atlas_file=atlas_file, subcortex=False)
+
+    cortical_vertices_count = _get_number_of_cortical_vertices_from_cifti_dscalar(cifti_template)
 
     # mask only cortical regions
-    surface_labels = surface_labels[:59412]
+    surface_labels = surface_labels[:cortical_vertices_count]
 
     labels = [x for x in list(set(surface_labels)) if x != 'Unlabeled']
     labels.sort()
 
     label_dict = {x: i for (i, x) in enumerate(labels)}
 
-    parcellation_matrix = np.zeros((len(labels), 59412))
+    parcellation_matrix = np.zeros((len(labels), cortical_vertices_count))
 
     for (i, x) in enumerate(surface_labels):
         parcellation_matrix[label_dict[x], i] = 1
@@ -308,7 +325,7 @@ def smooth_high_resolution_connectome(high_resolution_connectome, smoothing_kern
 
     Args:
 
-        high_resolution_connectome: The high-resolution structural connectome (59412 x 59412 sparse CSR matrix)
+        high_resolution_connectome: The high-resolution structural connectome (v x v sparse CSR matrix)
 
         smoothing_kernel: The v x v CSS high-resolution smoothing kernel
 
@@ -604,7 +621,7 @@ def downsample_high_resolution_structural_connectivity_to_atlas(high_resolution_
 
     Args:
 
-        high_resolution_connectome: The high-resolution structural connectome (59412 x 59412 sparse CSR matrix)
+        high_resolution_connectome: The high-resolution structural connectome (v x v sparse CSR matrix)
 
         parcellation: A p x v sparse percellation matrix (can also accept a soft parcellation)
 
