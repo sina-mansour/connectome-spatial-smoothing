@@ -474,13 +474,29 @@ def _apply_warp_to_points_mm_to_mm(native_mms, warp_file=None, warp=None):
     return native_mms + np.array([dx_mm, dy_mm, dz_mm]).T
 
 
-def _save_warped_tractography(track_file,
-                              warp_file,
-                              out_file):
+def save_warped_tractography(track_file,
+                             warp_file,
+                             out_file):
     """
     Reads in a .tck tractography file and uses a nonlinear warp to transform the tractogram
     to a new space. This can be used to warp the output of tractography from native space
     to a standard template space.
+
+    NOTE: This only performs a nonlinear warp, any prior linear transformations should be
+          applied. Normally, a transformation from native to MNI can include flirt + fnirt.
+          While flirt performs an initial linear warp, fnirt generates a nonlinear warp to
+          be used after the linear transformation. The original tractography may need a
+          linear transformation first, in which case, MRtrix's tcktransform function could
+          be used to compute the warped tractograms.
+
+    Args:
+
+        track_file: The tractography file to be warped (tck format)
+
+        warp_file: The nonlinear warp to nonlinearly transform streamlines (xfms -> nii file.
+
+        out_file: The path to save the warped tractography.
+
     """
     # load the track file streamlines
     tracks = nib.streamlines.load(track_file)
