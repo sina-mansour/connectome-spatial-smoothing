@@ -44,3 +44,7 @@ Then, you could simply use the package in your own code after importing:
 We have provided a short jupyter notebook showcasing all the functionalities described above. You may use the following link to open [this notebook](https://github.com/sina-mansour/connectome-based-smoothing/blob/main/notebooks/example.ipynb) in an interactive google colab session:
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sina-mansour/connectome-based-smoothing/blob/main/notebooks/example.ipynb)
+
+Note: there has been a new release with added functionality that is explained in the following interactive notebook:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sina-mansour/connectome-based-smoothing/blob/main/notebooks/example-v.1.0.3.ipynb)
