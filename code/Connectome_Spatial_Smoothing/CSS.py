@@ -173,7 +173,7 @@ def _label_surface_atlas_to_data(cifti=_get_sample_cifti_dscalar(), atlas_file=_
     return labels
 
 
-def parcellation_characteristic_matrix(atlas_file=_glasser_cifti, cifti_template=_get_sample_cifti_dscalar(), subcortex=False):
+def parcellation_characteristic_matrix(atlas_file=_glasser_cifti, cifti_file=_sample_cifti_dscalar, subcortex=False):
     '''
     This function generates a p x v characteristic matrix from a brain atlas.
 
@@ -192,6 +192,7 @@ def parcellation_characteristic_matrix(atlas_file=_glasser_cifti, cifti_template
 
         parcellation_matrix: The p x v sparse matrix representation of the atlas.
     '''
+    cifti_template = nib.load(cifti_file)
     surface_labels = _label_surface_atlas_to_data(cifti=cifti_template, atlas_file=atlas_file, subcortex=subcortex)
 
     cortical_vertices_count = _get_number_of_cortical_vertices_from_cifti_dscalar(cifti_template)
