@@ -301,7 +301,7 @@ def _local_distances_to_smoothing_coefficients(local_distance, sigma):
     return sklearn.preprocessing.normalize(gaussian, norm='l1', axis=0)
 
 
-def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilon=0.01, cifti_file=_sample_cifti_dscalar, subcortex=False):
+def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilon=0.01, cifti_file=_sample_cifti_dscalar, subcortex=False, volume_smoothing="integrated"):
     """
     Compute the CSS smoothing kernel on the cortical surfaces.
 
@@ -323,6 +323,16 @@ def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilo
                    voxels should also be include in the smoothing kernel. If True, then subcortical and
                    cerebellar regions are smoothed with a volumetric smoothing kernel.
 
+        volume_smoothing: [optional, default: "integrated"] If subcortex is set to True, this input selects
+                          the procedure to combine the volumetric smoothing with the cortical surface-based
+                          (geodesic) smoothing. If set to "integrated" the smoothing kernel would allow for
+                          smoothing weights between cortical surface nodes and the volumetric nodes according
+                          to the Euclidean distance metric. If set to "independent" the volumetric and surface
+                          smoothing kernels would be completely independent, i.e. the information will not be
+                          smoothed across the volumetric and surface representations. The default option is
+                          set to "integrated". this mainly allows for smoothing in between subcortical voxels
+                          and insular vertices that are spatially proximal.
+
     Returns:
 
         kernel: The v x v high-resolution smoothing kernel.
@@ -341,18 +351,34 @@ def compute_smoothing_kernel(left_surface_file, right_surface_file, fwhm, epsilo
         )
     else:
         cortical_vertices_count = _get_number_of_cortical_vertices_from_cifti_dscalar(nib.load(cifti_file))
-        subcortical_local_euclidean_distances = _get_spatial_local_distances(
-            _get_xyz(left_surface_file, right_surface_file)[cortical_vertices_count:],
-            _max_smoothing_distance(
-                sigma,
-                epsilon,
-                2
+        if volume_smoothing == "independent":
+            subcortical_local_euclidean_distances = _get_spatial_local_distances(
+                _get_xyz(left_surface_file, right_surface_file, cifti_file=cifti_file)[cortical_vertices_count:],
+                _max_smoothing_distance(
+                    sigma,
+                    epsilon,
+                    2
+                )
             )
-        )
-        combined_local_distances = _diagonal_stack_sparse_matrices(
-            cortical_local_geodesic_distances,
-            subcortical_local_euclidean_distances
-        )
+            combined_local_distances = _diagonal_stack_sparse_matrices(
+                cortical_local_geodesic_distances,
+                subcortical_local_euclidean_distances
+            )
+        elif volume_smoothing == "integrated":
+            volumetric_local_euclidean_distances = _get_spatial_local_distances(
+                _get_xyz(left_surface_file, right_surface_file, cifti_file=cifti_file),
+                _max_smoothing_distance(
+                    sigma,
+                    epsilon,
+                    2
+                )
+            )
+            combined_local_distances = sparse.bmat(
+                [
+                    [cortical_local_geodesic_distances, volumetric_local_euclidean_distances[:cortical_vertices_count, cortical_vertices_count:]],
+                    [volumetric_local_euclidean_distances[cortical_vertices_count:, :cortical_vertices_count], volumetric_local_euclidean_distances[cortical_vertices_count:, cortical_vertices_count:]]
+                ]
+            )
         return _local_distances_to_smoothing_coefficients(
             combined_local_distances,
             sigma,
@@ -430,10 +456,10 @@ def _get_xyz(left_surface_file, right_surface_file, cifti_file):
     brain_models = [x for x in img.header.get_index_map(1).brain_models]
 
     # left cortex
-    leftxyz = _get_xyz_hem_surface(left_surface_file, 0)
+    leftxyz = _get_xyz_hem_surface(left_surface_file, 0, cifti_file=cifti_file)
 
     # right cortex
-    rightxyz = _get_xyz_hem_surface(right_surface_file, 1)
+    rightxyz = _get_xyz_hem_surface(right_surface_file, 1, cifti_file=cifti_file)
 
     # subcortical regions
     subijk = np.array(list(itertools.chain.from_iterable([(x.voxel_indices_ijk) for x in brain_models[2:]])))
