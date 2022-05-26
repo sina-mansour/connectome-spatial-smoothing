@@ -47,4 +47,4 @@ We have provided a short jupyter notebook showcasing all the functionalities des
 
 Note: there has been a new release with added functionality that is explained in the following interactive notebook:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sina-mansour/connectome-based-smoothing/blob/main/notebooks/example-v.1.0.3.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sina-mansour/connectome-based-smoothing/blob/main/notebooks/example-v.0.1.3.ipynb)
