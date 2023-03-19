@@ -53,13 +53,15 @@ def _time_str(mode='abs', base=None):
 
 
 def _print_log(message, mode='info'):
+    x=1
+    """
     if mode == 'info':
         print ('{}: \033[0;32m[INFO]\033[0m {}'.format(_time_str(), message))
     if mode == 'err':
         print ('{}: \033[0;31m[ERROR]\033[0m {}'.format(_time_str(), message))
         quit()
     sys.stdout.flush()
-
+    """
 
 def _handle_process_with_que(que, func, args, kwds):
     que.put(func(*args, **kwds))
