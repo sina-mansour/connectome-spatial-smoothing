@@ -601,11 +601,16 @@ def _get_half_incidence_matrices_from_endpoint_distances(start_dists,
                                                          end_dists,
                                                          end_indices,
                                                          node_count,
-                                                         threshold):
+                                                         threshold,
+                                                         weights=None):
     """
     Returns two half incidence matrices in a sparse format (CSR) after
     filtering the streamlines that are far (>2mm) from their closest vertex.
     """
+    
+    if weights is None:
+        weights=np.ones(len(start_dists))
+        
     # mask points that are further than the threshold from all surface coordinates
     outlier_mask = (start_dists > threshold) | (end_dists > threshold)
     _print_log('outliers located: #{} outliers ({}%, with threshold {}mm)'.format(
@@ -620,7 +625,7 @@ def _get_half_incidence_matrices_from_endpoint_distances(start_dists,
     end_dict = {}
     indices = (i for i in range(len(outlier_mask)) if not outlier_mask[i])
     for l, i in enumerate(indices):
-        start_dict[(start_indices[i], l)] = start_dict.get((start_indices[i], l), 0) + 1
+        start_dict[(start_indices[i], l)] = start_dict.get((start_indices[i], l), 0) + weights[i]
         end_dict[(end_indices[i], l)] = end_dict.get((end_indices[i], l), 0) + 1
 
     start_inc_mat = sparse.dok_matrix(
@@ -663,6 +668,7 @@ def map_high_resolution_structural_connectivity(track_file,
                                                 right_surface_file,
                                                 warp_file=None,
                                                 threshold=2,
+                                                weights=None,
                                                 subcortex=False,
                                                 cifti_file=_sample_cifti_dscalar,):
     """
@@ -703,7 +709,7 @@ def map_high_resolution_structural_connectivity(track_file,
                 warp_file,
                 subcortex=subcortex,
             ),
-            threshold=threshold
+            threshold=threshold, weights=weights, 
         )
     )
 
