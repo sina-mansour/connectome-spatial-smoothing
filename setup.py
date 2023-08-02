@@ -3,7 +3,7 @@ import setuptools
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-requirements = ["numpy", "scipy", "sklearn", "nibabel", "gdist"]
+requirements = ["numpy", "scipy", "scikit-learn", "nibabel", "gdist"]
 
 setuptools.setup(
     name="Connectome_Spatial_Smoothing",
