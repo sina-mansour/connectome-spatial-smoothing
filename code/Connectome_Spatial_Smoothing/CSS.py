@@ -29,6 +29,7 @@ import multiprocessing as mp
 _main_dir = os.path.abspath(os.path.dirname(__file__))
 _sample_cifti_dscalar = os.path.join(_main_dir, 'data/templates/cifti/ones.dscalar.nii')
 _glasser_cifti = os.path.join(_main_dir, 'data/templates/atlas/Glasser360.32k_fs_LR.dlabel.nii')
+_verbose=True
 
 
 def _join_path(*args):
@@ -44,12 +45,13 @@ def _load_sparse(file_path):
 
 
 def _time_str(mode='abs', base=None):
-    if mode == 'rel':
-        return str(datetime.timedelta(seconds=(time.time() - base)))
-    if mode == 'raw':
-        return time.time()
-    if mode == 'abs':
-        return time.asctime(time.localtime(time.time()))
+    if _verbose:
+        if mode == 'rel':
+            return str(datetime.timedelta(seconds=(time.time() - base)))
+        if mode == 'raw':
+            return time.time()
+        if mode == 'abs':
+            return time.asctime(time.localtime(time.time()))
 
 
 def _print_log(message, mode='info'):
