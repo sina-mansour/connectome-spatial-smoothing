@@ -208,7 +208,7 @@ def parcellation_characteristic_matrix(atlas_file=_glasser_cifti, cifti_file=_sa
 
     label_dict = {x: i for (i, x) in enumerate(labels)}
 
-    parcellation_matrix = np.zeros((len(labels), cortical_vertices_count))
+    parcellation_matrix = np.zeros((len(labels), len(surface_labels)))
 
     for (i, x) in enumerate(surface_labels):
         parcellation_matrix[label_dict[x], i] = 1
