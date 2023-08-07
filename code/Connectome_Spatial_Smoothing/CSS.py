@@ -45,22 +45,22 @@ def _load_sparse(file_path):
 
 
 def _time_str(mode='abs', base=None):
-    if _verbose:
-        if mode == 'rel':
-            return str(datetime.timedelta(seconds=(time.time() - base)))
-        if mode == 'raw':
-            return time.time()
-        if mode == 'abs':
-            return time.asctime(time.localtime(time.time()))
+    if mode == 'rel':
+        return str(datetime.timedelta(seconds=(time.time() - base)))
+    if mode == 'raw':
+        return time.time()
+    if mode == 'abs':
+        return time.asctime(time.localtime(time.time()))
 
 
 def _print_log(message, mode='info'):
-    if mode == 'info':
-        print ('{}: \033[0;32m[INFO]\033[0m {}'.format(_time_str(), message))
-    if mode == 'err':
-        print ('{}: \033[0;31m[ERROR]\033[0m {}'.format(_time_str(), message))
-        quit()
-    sys.stdout.flush()
+    if _verbose:
+        if mode == 'info':
+            print ('{}: \033[0;32m[INFO]\033[0m {}'.format(_time_str(), message))
+        if mode == 'err':
+            print ('{}: \033[0;31m[ERROR]\033[0m {}'.format(_time_str(), message))
+            quit()
+        sys.stdout.flush()
 
 
 def _handle_process_with_que(que, func, args, kwds):
