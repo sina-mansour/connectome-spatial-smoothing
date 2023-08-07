@@ -15,3 +15,6 @@ connectome-spatial-smoothing.sublime-workspace
 # test notebooks
 code/Connectome_Spatial_Smoothing/__pycache__/
 notebooks/temp.ipynb
+
+# ignore the pypi toke
+token.tmp

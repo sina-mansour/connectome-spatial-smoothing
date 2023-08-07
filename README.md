@@ -41,6 +41,16 @@ Then, you could simply use the package in your own code after importing:
 
 ---
 
+## Usage notes
+
+### Verbosity:
+
+By default CSS scripts print out a bunch of logs that may or may not be of interest to you. If you like to disable the logs, simply add the following script:
+
+`css._verbose = False`
+
+---
+
 We have provided a short jupyter notebook showcasing all the functionalities described above. You may use the following link to open [this notebook](https://github.com/sina-mansour/connectome-based-smoothing/blob/main/notebooks/example.ipynb) in an interactive google colab session:
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sina-mansour/connectome-based-smoothing/blob/main/notebooks/example.ipynb)
