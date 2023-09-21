@@ -665,11 +665,13 @@ def _get_adjacency_from_half_incidence_matrices(U, V, stat='sum'):
     return a sparse adjacency matrix A from the two halfs of incidence matrix U & V.
     """
     A = U.dot(V.T)
+    A = A + A.T
     if stat == 'mean':
         # compute average instead of sum
         A_div = (U != 0).astype(int).dot(((V != 0).astype(int)).T)
+        A_div = A_div + A_div.T
         A.data = A.data / A_div.data
-    return A + A.T
+    return A
 
 
 def map_high_resolution_structural_connectivity(track_file,
