@@ -33,7 +33,7 @@ The codes in this repository mainly perform the following tasks:
 
 To use CSS functionality in your code, you can install the package with the following command:
 
-`pip install Connectome-Spatial-Smoothing`
+`pip install -U Connectome-Spatial-Smoothing`
 
 Then, you could simply use the package in your own code after importing:
 
